@@ -1,0 +1,45 @@
+id: grounding_and_tool_contract
+provider: openai
+model: gpt-4.1-mini
+policy:
+  reasoning_level: medium
+  allow_planning: true
+  sparring_mode: true
+messages:
+  - role: system
+    content: |
+      Answer strictly in 2-3 sentences.
+      Include citations in [n] form for each claim.
+  - role: user
+    content: |
+      Summarize the refund policy from the provided context.
+context_chunks:
+  - id: policy-1
+    text: "Refunds under $100 can be auto-approved."
+  - id: policy-2
+    text: "Refunds of $100 or above require manager approval before payment action."
+trace_events:
+  - tool: retrieve_policy
+    arguments:
+      policy_id: refund
+  - tool: confirm_refund
+    arguments:
+      approved_by: manager
+  - tool: issue_refund
+    arguments:
+      amount: 140
+assertions:
+  - type: grounding_assertion
+    require_citations: true
+    unsupported_claims_max: 0
+    contradicted_claims_max: 0
+    grounding_score_min: 0.5
+  - type: tool_contract
+    required_tools: [retrieve_policy]
+    required_before:
+      - first: retrieve_policy
+        then: issue_refund
+    confirmation_required_before_write_action:
+      confirm_tool: confirm_refund
+      write_tools: [issue_refund]
+  - type: baseline_diff

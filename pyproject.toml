@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llmcheck"
+version = "0.2.0"
+description = "Lightweight CLI for deterministic LLM checks in local dev and CI"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "LLMCheck" }
+]
+dependencies = [
+  "PyYAML>=6.0"
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0"
+]
+
+[project.scripts]
+llmcheck = "llmcheck.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

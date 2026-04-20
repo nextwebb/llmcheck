@@ -1,0 +1,36 @@
+id: solvable_classification_gemini
+provider: gemini
+model: gemini-1.5-flash
+policy:
+  reasoning_level: medium
+  allow_planning: true
+  sparring_mode: true
+  conversational_style: true
+  unpredictable_style: true
+messages:
+  - role: system
+    content: |
+      You classify whether a task is solvable with the provided context.
+      Respond strictly as JSON with this shape:
+      {"solvable": true|false, "reason": "short explanation"}
+  - role: user
+    content: |
+      Task: "Sort this list ascending: [9, 2, 2, 7, 1]"
+      Context: "No external network or files required"
+assertions:
+  - type: schema_valid
+    schema:
+      type: object
+      required: [solvable, reason]
+      properties:
+        solvable:
+          type: boolean
+        reason:
+          type: string
+  - type: json_path_equals
+    path: solvable
+    value: true
+  - type: baseline_diff
+  - type: stability
+    threshold: 0.6
+repeats: 3
