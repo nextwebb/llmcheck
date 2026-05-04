@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 .venv/
 .llmcheck/reports/
+*.egg-info/
+.llmcheck/agentic-poc-sessions.json
+.llmcheck/agentic-*.log

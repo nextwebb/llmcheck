@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: install init doctor list run diff compare test update-baseline dashboard
+.PHONY: install init doctor list run diff compare test update-baseline dashboard agentic-poc-backend agentic-poc-frontend
 
 install:
 	$(PYTHON) -m pip install -e .
@@ -31,3 +31,9 @@ update-baseline:
 
 dashboard:
 	PYTHONPATH=src $(PYTHON) -m llmcheck.cli serve -c llmcheck.yaml --host 127.0.0.1 --port 9090
+
+agentic-poc-backend:
+	PYTHONPATH=src:apps/agentic-poc/backend $(PYTHON) -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+
+agentic-poc-frontend:
+	$(PYTHON) -m http.server 4173 --directory apps/agentic-poc/frontend

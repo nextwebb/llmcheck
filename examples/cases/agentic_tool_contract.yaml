@@ -1,0 +1,21 @@
+id: agentic_tool_contract
+provider: openai
+model: gpt-4.1-mini
+messages:
+  - role: user
+    content: "Summarize the refund policy accurately."
+context_chunks:
+  - id: refund-policy
+    text: "Refunds above $100 require manager approval."
+trace_events:
+  - tool: knowledge_lookup
+    arguments:
+      topic: refund_policy
+assertions:
+  - type: grounding_assertion
+    require_citations: false
+    unsupported_claims_max: 0
+    contradicted_claims_max: 0
+    grounding_score_min: 0.6
+  - type: tool_contract
+    required_tools: [knowledge_lookup]

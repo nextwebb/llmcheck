@@ -38,6 +38,14 @@ llmcheck diff -c llmcheck.yaml
 llmcheck compare -c llmcheck.yaml
 ```
 
+## Agentic Workflow POC
+
+A local-first single-agent chat POC is available in `apps/agentic-poc`.
+
+- Backend run: `make agentic-poc-backend`
+- Frontend run: `make agentic-poc-frontend`
+- Testing guide: `docs/agentic-poc-testing.md`
+
 Optional JUnit output:
 
 ```bash

@@ -12,7 +12,10 @@ authors = [
   { name = "LLMCheck" }
 ]
 dependencies = [
-  "PyYAML>=6.0"
+  "PyYAML>=6.0",
+  "fastapi>=0.115.0",
+  "uvicorn>=0.30.0",
+  "httpx>=0.27.0"
 ]
 
 [project.optional-dependencies]
