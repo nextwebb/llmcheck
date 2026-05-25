@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LLMCheck Demo - Capture</title>
+  <style>
+    :root {
+      --bg: #f4eee3;
+      --panel: #fffdfa;
+      --ink: #17202a;
+      --muted: #5f6b76;
+      --edge: #dccfbe;
+      --accent: #9f3f37;
+      --terminal: #171717;
+      --terminal-ink: #f8f8f2;
+      --ok: #7ee787;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: radial-gradient(circle at top left, #fffaf0 0%, var(--bg) 55%, #e9dccb 100%);
+      color: var(--ink);
+    }
+    .wrap {
+      width: 1280px;
+      min-height: 720px;
+      margin: 0 auto;
+      padding: 44px 54px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 28px;
+      align-items: center;
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 7px 12px;
+      border: 1px solid var(--edge);
+      border-radius: 999px;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.72);
+    }
+    h1 {
+      margin: 18px 0 12px;
+      font-size: 58px;
+      line-height: 1.04;
+    }
+    .lead {
+      margin: 0;
+      max-width: 560px;
+      font-size: 23px;
+      line-height: 1.45;
+      color: #2e3b46;
+    }
+    .points {
+      margin-top: 28px;
+      display: grid;
+      gap: 12px;
+      font-size: 19px;
+    }
+    .point strong { color: var(--accent); }
+    .term {
+      background: var(--terminal);
+      color: var(--terminal-ink);
+      border-radius: 24px;
+      padding: 24px 26px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.18);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .term .title {
+      color: #b3b3b3;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+    .good { color: var(--ok); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section>
+      <div class="eyebrow">Step 1 · Capture</div>
+      <h1>Catch a bad run before it disappears into logs.</h1>
+      <p class="lead">
+        Instrument the OpenAI client, attach workflow tags, and flag a suspicious answer.
+        LLMCheck stores the run locally so you can inspect exactly what happened.
+      </p>
+      <div class="points">
+        <div class="point"><strong>Input:</strong> real app messages, not synthetic prompts</div>
+        <div class="point"><strong>Storage:</strong> local SQLite at <code>.llmcheck/llmcheck.db</code></div>
+        <div class="point"><strong>Result:</strong> one flagged run ready for review</div>
+      </div>
+    </section>
+    <section class="term">
+      <div class="title">$ llmcheck list --flagged</div>
+      <pre>run_id | created_at | flagged | reason | input | output
+<span class="good">run_c830c4e0f927</span> | 2026-05-25T18:58:36Z | yes | missing_acme_refund_policy |
+Can I get a refund above $137 at Acme? |
+Yes, you can request a refund above $137 at Acme,
+but it may depend on the specific return policy
+and item purchased.</pre>
+    </section>
+  </div>
+</body>
+</html>

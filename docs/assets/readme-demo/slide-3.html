@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LLMCheck Demo - Dashboard</title>
+  <style>
+    :root {
+      --bg: #f6efe5;
+      --panel: #fffdf9;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --edge: #dfd3c3;
+      --accent: #a63d40;
+      --ok: #166534;
+      --soft: #ede1cf;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: linear-gradient(180deg, #f7f2ea, #efe5d6);
+      color: var(--ink);
+    }
+    .wrap {
+      width: 1280px;
+      min-height: 720px;
+      margin: 0 auto;
+      padding: 30px 32px 36px;
+    }
+    .hero {
+      margin-bottom: 20px;
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 11px;
+      border: 1px solid var(--edge);
+      border-radius: 999px;
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.72);
+    }
+    h1 {
+      margin: 14px 0 8px;
+      font-size: 46px;
+    }
+    .lead {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.45;
+      max-width: 980px;
+      color: #334155;
+    }
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(6, 1fr);
+      margin: 22px 0 18px;
+    }
+    .card, .panel {
+      background: var(--panel);
+      border: 1px solid var(--edge);
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.05);
+    }
+    .card {
+      padding: 16px;
+    }
+    .k {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .v {
+      font-size: 30px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 16px;
+    }
+    .panel {
+      padding: 18px;
+    }
+    h2 {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 28px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--soft);
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: var(--ok);
+      font: 12px/1 ui-monospace, monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow">Step 3 · Inspect</div>
+      <h1>Use the local dashboard to see whether the thesis is worth continuing.</h1>
+      <p class="lead">
+        The pilot dashboard is intentionally narrow: summary metrics, recent pilot reviews, and approved knowledge entries. It exists to test whether the missing-context loop is real, not to impersonate a finished observability platform.
+      </p>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div class="k">Total Reviews</div><div class="v">1</div></div>
+      <div class="card"><div class="k">Confirmed Failures</div><div class="v">1</div></div>
+      <div class="card"><div class="k">Missing Context Share</div><div class="v">100%</div></div>
+      <div class="card"><div class="k">Reusable Pattern Share</div><div class="v">100%</div></div>
+      <div class="card"><div class="k">Knowledge Approval Rate</div><div class="v">100%</div></div>
+      <div class="card"><div class="k">Repeat Pattern Share</div><div class="v">0%</div></div>
+    </div>
+
+    <div class="split">
+      <div class="panel">
+        <h2>Recent Pilot Reviews</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Run</th>
+              <th>Workflow</th>
+              <th>Root Cause</th>
+              <th>Outcome</th>
+              <th>Reusable</th>
+              <th>Knowledge</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>run_c830c4e0f927</code></td>
+              <td>acme-refund-bot</td>
+              <td>missing_context<br /><small>missing_policy_fact</small></td>
+              <td>confirmed_failure</td>
+              <td><span class="badge">yes</span></td>
+              <td>policy_fact<br /><small>approved</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Knowledge Entries</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Title</th>
+              <th>Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>policy_fact</td>
+              <td><strong>Acme refund approval policy</strong><br /><small>high</small></td>
+              <td>retrieval_planning_only,<br />runtime_retrieval_allowed</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

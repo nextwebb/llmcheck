@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 
-from .models import AppConfig, AssertionSpec, CaseSpec, PromptPolicy, ProviderConfig, SuiteSpec, VariantSpec
+from .storage.models import AppConfig, JudgeConfig, StorageConfig, SuiteRunnerConfig, SuiteSpec, SuiteTestCase
 
 
 class ConfigError(Exception):
@@ -14,15 +14,13 @@ class ConfigError(Exception):
 
 def _load_yaml(path: Path) -> dict[str, Any]:
     try:
-        with path.open("r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     except FileNotFoundError as exc:
-        raise ConfigError(f"Config file not found: {path}") from exc
+        raise ConfigError(f"file not found: {path}") from exc
     except yaml.YAMLError as exc:
-        raise ConfigError(f"Invalid YAML in {path}: {exc}") from exc
-
+        raise ConfigError(f"invalid YAML in {path}: {exc}") from exc
     if not isinstance(data, dict):
-        raise ConfigError(f"Top-level config must be a map: {path}")
+        raise ConfigError(f"top-level YAML must be a map: {path}")
     return data
 
 
@@ -30,234 +28,91 @@ def load_config(config_path: Path) -> AppConfig:
     raw = _load_yaml(config_path)
     root_dir = config_path.parent.resolve()
 
-    raw_providers = raw.get("providers", {})
-    if not isinstance(raw_providers, dict):
-        raise ConfigError("`providers` must be a map")
+    storage_raw = raw.get("storage") or {}
+    if not isinstance(storage_raw, dict):
+        raise ConfigError("`storage` must be a map")
+    storage_path = storage_raw.get("path", ".llmcheck/llmcheck.db")
+    if not isinstance(storage_path, str) or not storage_path.strip():
+        raise ConfigError("storage.path must be a non-empty string")
 
-    providers: dict[str, ProviderConfig] = {}
-    for name, p in raw_providers.items():
-        if not isinstance(p, dict):
-            raise ConfigError(f"provider `{name}` must be a map")
-        api_key_env = p.get("api_key_env")
-        if not isinstance(api_key_env, str) or not api_key_env.strip():
-            raise ConfigError(f"provider `{name}` missing `api_key_env`")
-        base_url = p.get("base_url")
-        if base_url is not None and not isinstance(base_url, str):
-            raise ConfigError(f"provider `{name}` has invalid `base_url`")
-        providers[name] = ProviderConfig(api_key_env=api_key_env, base_url=base_url)
-
-    raw_suites = raw.get("suites", [])
-    if not isinstance(raw_suites, list) or not raw_suites:
-        raise ConfigError("`suites` must be a non-empty list")
-
-    suites: list[SuiteSpec] = []
-    for item in raw_suites:
-        if not isinstance(item, dict):
-            raise ConfigError("each suite must be a map")
-        name = item.get("name")
-        if not isinstance(name, str) or not name.strip():
-            raise ConfigError("suite missing `name`")
-        case_globs = item.get("cases", [])
-        if isinstance(case_globs, str):
-            case_globs = [case_globs]
-        if not isinstance(case_globs, list) or not case_globs:
-            raise ConfigError(f"suite `{name}` needs non-empty `cases`")
-        if not all(isinstance(g, str) and g.strip() for g in case_globs):
-            raise ConfigError(f"suite `{name}` has invalid case globs")
-        suites.append(SuiteSpec(name=name, case_globs=case_globs))
-
-    raw_variants = raw.get("variants", [])
-    variants: list[VariantSpec] = []
-    if raw_variants is not None:
-        if not isinstance(raw_variants, list):
-            raise ConfigError("`variants` must be a list")
-        for item in raw_variants:
-            if not isinstance(item, dict):
-                raise ConfigError("each variant must be a map")
-            name = item.get("name")
-            if not isinstance(name, str) or not name.strip():
-                raise ConfigError("variant missing `name`")
-            provider = item.get("provider")
-            model = item.get("model")
-            prompt_prefix = item.get("prompt_prefix")
-            if provider is not None and not isinstance(provider, str):
-                raise ConfigError(f"variant `{name}` has invalid `provider`")
-            if model is not None and not isinstance(model, str):
-                raise ConfigError(f"variant `{name}` has invalid `model`")
-            if prompt_prefix is not None and not isinstance(prompt_prefix, str):
-                raise ConfigError(f"variant `{name}` has invalid `prompt_prefix`")
-            variants.append(VariantSpec(name=name, provider=provider, model=model, prompt_prefix=prompt_prefix))
-
-    return AppConfig(root_dir=root_dir, providers=providers, suites=suites, variants=variants)
-
-
-def _read_case(path: Path, suite: str) -> CaseSpec:
-    raw = _load_yaml(path)
-
-    case_id = raw.get("id")
-    if not isinstance(case_id, str) or not case_id.strip():
-        case_id = path.stem
-
-    provider = raw.get("provider")
-    model = raw.get("model")
+    judge_raw = raw.get("judge") or {}
+    if not isinstance(judge_raw, dict):
+        raise ConfigError("`judge` must be a map")
+    provider = judge_raw.get("provider", "openai")
+    model = judge_raw.get("model", "gpt-4o-mini")
     if not isinstance(provider, str) or not provider.strip():
-        raise ConfigError(f"{path}: missing provider")
+        raise ConfigError("judge.provider must be a non-empty string")
     if not isinstance(model, str) or not model.strip():
-        raise ConfigError(f"{path}: missing model")
+        raise ConfigError("judge.model must be a non-empty string")
 
-    messages = raw.get("messages")
-    prompt = raw.get("prompt")
-    if messages is None and isinstance(prompt, str) and prompt.strip():
-        messages = [{"role": "user", "content": prompt}]
-
-    if not isinstance(messages, list) or not messages:
-        raise ConfigError(f"{path}: `messages` must be a non-empty list")
-
-    normalized_messages: list[dict[str, str]] = []
-    for msg in messages:
-        if not isinstance(msg, dict):
-            raise ConfigError(f"{path}: each message must be a map")
-        role = msg.get("role")
-        content = msg.get("content")
-        if not isinstance(role, str) or not isinstance(content, str):
-            raise ConfigError(f"{path}: invalid message role/content")
-        normalized_messages.append({"role": role, "content": content})
-
-    raw_context_files = raw.get("context_files", [])
-    if raw_context_files is None:
-        raw_context_files = []
-    if not isinstance(raw_context_files, list):
-        raise ConfigError(f"{path}: `context_files` must be a list")
-    context_files: list[Path] = []
-    for item in raw_context_files:
-        if not isinstance(item, str) or not item.strip():
-            raise ConfigError(f"{path}: invalid context_files item")
-        context_files.append((path.parent / item).resolve())
-
-    raw_context_chunks = raw.get("context_chunks", [])
-    if raw_context_chunks is None:
-        raw_context_chunks = []
-    if not isinstance(raw_context_chunks, list):
-        raise ConfigError(f"{path}: `context_chunks` must be a list")
-    context_chunks: list[dict[str, Any]] = []
-    for chunk in raw_context_chunks:
-        if isinstance(chunk, str):
-            context_chunks.append({"id": f"chunk-{len(context_chunks) + 1}", "text": chunk})
-            continue
-        if isinstance(chunk, dict):
-            text = chunk.get("text")
-            if not isinstance(text, str) or not text.strip():
-                raise ConfigError(f"{path}: each context chunk map needs non-empty `text`")
-            chunk_id = chunk.get("id")
-            if chunk_id is not None and not isinstance(chunk_id, str):
-                raise ConfigError(f"{path}: context chunk `id` must be a string")
-            context_chunks.append({"id": chunk_id or f"chunk-{len(context_chunks) + 1}", "text": text})
-            continue
-        raise ConfigError(f"{path}: invalid context chunk entry")
-
-    trace_file_raw = raw.get("trace_file")
-    trace_file: Path | None = None
-    if trace_file_raw is not None:
-        if not isinstance(trace_file_raw, str) or not trace_file_raw.strip():
-            raise ConfigError(f"{path}: `trace_file` must be a non-empty string path")
-        trace_file = (path.parent / trace_file_raw).resolve()
-
-    raw_trace_events = raw.get("trace_events", [])
-    if raw_trace_events is None:
-        raw_trace_events = []
-    if not isinstance(raw_trace_events, list):
-        raise ConfigError(f"{path}: `trace_events` must be a list")
-    trace_events: list[dict[str, Any]] = []
-    for event in raw_trace_events:
-        if not isinstance(event, dict):
-            raise ConfigError(f"{path}: each trace event must be a map")
-        trace_events.append(event)
-
-    raw_assertions = raw.get("assertions", [])
-    if not isinstance(raw_assertions, list) or not raw_assertions:
-        raise ConfigError(f"{path}: `assertions` must be a non-empty list")
-
-    assertions: list[AssertionSpec] = []
-    for assertion in raw_assertions:
-        if not isinstance(assertion, dict):
-            raise ConfigError(f"{path}: each assertion must be a map")
-        check_type = assertion.get("type")
-        if not isinstance(check_type, str) or not check_type.strip():
-            raise ConfigError(f"{path}: assertion missing `type`")
-        params = {k: v for k, v in assertion.items() if k != "type"}
-        assertions.append(AssertionSpec(type=check_type, params=params))
-
-    baseline_enabled = bool(raw.get("baseline", {}).get("enabled", True)) if isinstance(raw.get("baseline"), dict) else True
-    repeats = raw.get("repeats", 1)
-    if not isinstance(repeats, int) or repeats < 1:
-        raise ConfigError(f"{path}: repeats must be an integer >= 1")
-
-    policy_raw = raw.get("policy", {})
-    if policy_raw is None:
-        policy_raw = {}
-    if not isinstance(policy_raw, dict):
-        raise ConfigError(f"{path}: policy must be a map")
-
-    reasoning_level = policy_raw.get("reasoning_level", "medium")
-    if reasoning_level not in {"low", "medium", "high"}:
-        raise ConfigError(f"{path}: policy.reasoning_level must be low|medium|high")
-
-    allow_planning = policy_raw.get("allow_planning", True)
-    sparring_mode = policy_raw.get("sparring_mode", True)
-    conversational_style = policy_raw.get("conversational_style", False)
-    unpredictable_style = policy_raw.get("unpredictable_style", False)
-    if not isinstance(allow_planning, bool):
-        raise ConfigError(f"{path}: policy.allow_planning must be boolean")
-    if not isinstance(sparring_mode, bool):
-        raise ConfigError(f"{path}: policy.sparring_mode must be boolean")
-    if not isinstance(conversational_style, bool):
-        raise ConfigError(f"{path}: policy.conversational_style must be boolean")
-    if not isinstance(unpredictable_style, bool):
-        raise ConfigError(f"{path}: policy.unpredictable_style must be boolean")
-
-    return CaseSpec(
-        id=case_id,
-        suite=suite,
-        provider=provider,
-        model=model,
-        messages=normalized_messages,
-        assertions=assertions,
-        path=path,
-        context_files=context_files,
-        context_chunks=context_chunks,
-        trace_file=trace_file,
-        trace_events=trace_events,
-        baseline_enabled=baseline_enabled,
-        repeats=repeats,
-        policy=PromptPolicy(
-            reasoning_level=reasoning_level,
-            allow_planning=allow_planning,
-            sparring_mode=sparring_mode,
-            conversational_style=conversational_style,
-            unpredictable_style=unpredictable_style,
-        ),
+    return AppConfig(
+        root_dir=root_dir,
+        storage=StorageConfig(path=(root_dir / storage_path).resolve()),
+        judge=JudgeConfig(provider=provider, model=model),
     )
 
 
-def load_cases(config: AppConfig, suite_filter: str | None = None) -> list[CaseSpec]:
-    cases: list[CaseSpec] = []
-    for suite in config.suites:
-        if suite_filter and suite.name != suite_filter:
-            continue
-        for pattern in suite.case_globs:
-            for path in sorted(config.root_dir.glob(pattern)):
-                if path.is_file():
-                    cases.append(_read_case(path.resolve(), suite.name))
+def load_suite(suite_path: Path) -> SuiteSpec:
+    raw = _load_yaml(suite_path)
+    runner_raw = raw.get("runner")
+    tests_raw = raw.get("tests")
+    if not isinstance(runner_raw, dict):
+        raise ConfigError("suite `runner` must be a map")
+    if not isinstance(tests_raw, list):
+        raise ConfigError("suite `tests` must be a list")
 
-    if not cases:
-        detail = f" for suite `{suite_filter}`" if suite_filter else ""
-        raise ConfigError(f"No cases found{detail}")
+    runner_type = runner_raw.get("type")
+    runner_callable = runner_raw.get("callable")
+    if runner_type != "python":
+        raise ConfigError("runner.type must be `python` for V1")
+    if not isinstance(runner_callable, str) or ":" not in runner_callable:
+        raise ConfigError("runner.callable must be `module.path:function_name`")
 
-    seen: set[tuple[str, str]] = set()
-    for case in cases:
-        key = (case.suite, case.id)
-        if key in seen:
-            raise ConfigError(f"Duplicate case id in suite `{case.suite}`: {case.id}")
-        seen.add(key)
+    tests: list[SuiteTestCase] = []
+    for item in tests_raw:
+        if not isinstance(item, dict):
+            raise ConfigError("each suite test must be a map")
+        test_id = item.get("id")
+        source_run_id = item.get("source_run_id")
+        source_reason = item.get("source_reason")
+        metadata = item.get("metadata") or {}
+        inputs = item.get("inputs") or {}
+        context = item.get("context") or []
+        expected = item.get("expected") or {}
+        judge = item.get("judge") or {}
+        if not isinstance(test_id, str) or not test_id.strip():
+            raise ConfigError("suite test missing `id`")
+        if not isinstance(source_run_id, str) or not source_run_id.strip():
+            raise ConfigError(f"suite test `{test_id}` missing `source_run_id`")
+        if not isinstance(source_reason, str) or not source_reason.strip():
+            raise ConfigError(f"suite test `{test_id}` missing `source_reason`")
+        if not isinstance(metadata, dict):
+            raise ConfigError(f"suite test `{test_id}` metadata must be a map")
+        if not isinstance(inputs, dict):
+            raise ConfigError(f"suite test `{test_id}` inputs must be a map")
+        if not isinstance(context, list):
+            raise ConfigError(f"suite test `{test_id}` context must be a list")
+        if not isinstance(expected, dict):
+            raise ConfigError(f"suite test `{test_id}` expected must be a map")
+        if not isinstance(judge, dict):
+            raise ConfigError(f"suite test `{test_id}` judge must be a map")
+        must_include = expected.get("must_include") or []
+        must_not_claim = expected.get("must_not_claim") or []
+        if not isinstance(must_include, list) or not all(isinstance(x, str) for x in must_include):
+            raise ConfigError(f"suite test `{test_id}` expected.must_include must be a string list")
+        if not isinstance(must_not_claim, list) or not all(isinstance(x, str) for x in must_not_claim):
+            raise ConfigError(f"suite test `{test_id}` expected.must_not_claim must be a string list")
+        tests.append(
+            SuiteTestCase(
+                id=test_id,
+                source_run_id=source_run_id,
+                source_reason=source_reason,
+                metadata=metadata,
+                inputs=inputs,
+                context=context,
+                expected={"must_include": must_include, "must_not_claim": must_not_claim},
+                judge=judge,
+            )
+        )
 
-    return cases
+    return SuiteSpec(runner=SuiteRunnerConfig(type="python", callable=runner_callable), tests=tests)

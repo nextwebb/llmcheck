@@ -1,23 +1,6 @@
-providers:
-  openai:
-    api_key_env: OPENAI_API_KEY
-  anthropic:
-    api_key_env: ANTHROPIC_API_KEY
-  gemini:
-    api_key_env: GEMINI_API_KEY
+storage:
+  path: .llmcheck/llmcheck.db
 
-suites:
-  - name: solvability
-    cases:
-      - examples/cases/*.yaml
-
-variants:
-  - name: openai-mini
-    provider: openai
-    model: gpt-4.1-mini
-  - name: claude-sonnet
-    provider: anthropic
-    model: claude-3-5-sonnet-latest
-  - name: gemini-flash
-    provider: gemini
-    model: gemini-1.5-flash
+judge:
+  provider: openai
+  model: gpt-4o-mini

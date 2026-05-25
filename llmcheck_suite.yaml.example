@@ -1,0 +1,5 @@
+runner:
+  type: python
+  callable: "examples.rag_support_agent:answer_user"
+
+tests: []
