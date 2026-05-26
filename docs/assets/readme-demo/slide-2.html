@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LLMCheck Demo - Review</title>
+  <style>
+    :root {
+      --bg: #f0eadf;
+      --panel: #fffdfa;
+      --ink: #17202a;
+      --muted: #697481;
+      --edge: #d9cfbf;
+      --accent: #9c413b;
+      --terminal: #171717;
+      --terminal-ink: #f5f5f5;
+      --note: #fff0c7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background: linear-gradient(180deg, #fbf5ea 0%, var(--bg) 100%);
+      color: var(--ink);
+    }
+    .wrap {
+      width: 1280px;
+      min-height: 720px;
+      margin: 0 auto;
+      padding: 40px 50px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--edge);
+      border-radius: 24px;
+      padding: 26px 28px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.07);
+    }
+    .eyebrow {
+      display: inline-block;
+      padding: 7px 12px;
+      border: 1px solid var(--edge);
+      border-radius: 999px;
+      color: var(--accent);
+      font-size: 14px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.72);
+    }
+    h1 {
+      margin: 16px 0 10px;
+      font-size: 50px;
+      line-height: 1.05;
+    }
+    .lead {
+      margin: 0 0 22px;
+      font-size: 22px;
+      line-height: 1.42;
+      color: #2f3943;
+    }
+    .note {
+      background: var(--note);
+      border-radius: 18px;
+      padding: 16px 18px;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .term {
+      background: var(--terminal);
+      color: var(--terminal-ink);
+      border-radius: 24px;
+      padding: 20px 22px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      height: 100%;
+    }
+    .term .title {
+      color: #bdbdbd;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    pre {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.42;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="panel">
+      <div class="eyebrow">Step 2 · Pilot Review</div>
+      <h1>Classify the failure and approve only the knowledge worth keeping.</h1>
+      <p class="lead">
+        The pilot review is not a generic note field. You classify root cause, decide whether the failure is reusable, and approve typed knowledge with explicit usage modes.
+      </p>
+      <div class="note">
+        <strong>Reviewed result:</strong><br />
+        root cause = <code>missing_context</code><br />
+        subtype = <code>missing_policy_fact</code><br />
+        knowledge type = <code>policy_fact</code><br />
+        usage = <code>retrieval_planning_only</code>, <code>runtime_retrieval_allowed</code>
+      </div>
+    </section>
+    <section class="term">
+      <div class="title">$ llmcheck pilot-review --latest</div>
+      <pre>{
+  "workflow": "acme-refund-bot",
+  "severity": "high",
+  "issue_class_guess": "policy_violation",
+  "root_cause": "missing_context",
+  "missing_context_subtype": "missing_policy_fact",
+  "review_outcome": "confirmed_failure",
+  "reusable_pattern": true,
+  "candidate_knowledge_type": "policy_fact",
+  "knowledge_approved": true,
+  "approved_usage_modes": [
+    "retrieval_planning_only",
+    "runtime_retrieval_allowed"
+  ]
+}
+
+saved knowledge entry:
+kb_7121ff79213d
+
+Acme refund approval policy
+Acme refunds above $137 require
+finance approval and take 9 business days.</pre>
+    </section>
+  </div>
+</body>
+</html>
