@@ -29,6 +29,8 @@ def _metadata_text() -> str:
         "Summary: Turn bad LLM/RAG runs into local regression checks for CI\n"
         "Requires-Python: >=3.10\n"
         "Requires-Dist: PyYAML>=6.0\n"
+        "Provides-Extra: test\n"
+        'Requires-Dist: pytest>=8.0; extra == "test"\n'
     )
 
 
