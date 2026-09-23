@@ -18,9 +18,9 @@ Open the address printed by the command. The demo lets you select fixed syntheti
 
 ![LLMCheck workflow demonstration](docs/assets/llmcheck-demo.gif)
 
-## Article examples
+## Run an offline example
 
-Browse the [article reproduction scripts and instructions](examples/article/README.md) directly in this repository. They include the offline capture/review/replay demo, result inspector, twelve-case experiment and gate probes. Use the documented historical checkout to reproduce the article figures; no separate ZIP is needed. The [interactive case explorer](https://llmcheck-demo.onrender.com/#explorer) lets you inspect the twelve synthetic cases in your browser.
+The [refund-policy example](examples/refund-policy/README.md) captures a scripted bad response, reviews a YAML case and replays four outcomes against the current checkout. It needs no API key. Start there to inspect the files and understand the workflow before connecting your application. The injected literal judge is a test double; its verdicts do not measure semantic accuracy.
 
 ## Install
 

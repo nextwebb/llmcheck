@@ -1,4 +1,4 @@
-"""Print stored companion verdicts and reported evidence; never rerun a judge."""
+"""Print stored refund-policy verdicts and reported evidence; never rerun a judge."""
 import argparse
 import json
 from pathlib import Path
@@ -6,7 +6,7 @@ from pathlib import Path
 
 def render(rows):
     if not isinstance(rows, list):
-        raise ValueError('Expected a JSON list of companion scenarios.')
+        raise ValueError('Expected a JSON list of refund-policy scenarios.')
     lines = []
     for row in rows:
         if not isinstance(row, dict) or not isinstance(row.get('scenario'), str):
@@ -35,7 +35,7 @@ def render(rows):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('results', type=Path, help='Path to companion replay-results.json')
+    parser.add_argument('results', type=Path, help='Path to refund-policy replay-results.json')
     args = parser.parse_args()
     try:
         output = render(json.loads(args.results.read_text(encoding='utf-8')))

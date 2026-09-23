@@ -98,14 +98,14 @@ def test_package_data_is_included_and_symlinks_are_excluded(tmp_path, monkeypatc
     assets = package / "demo_assets"
     assets.mkdir(parents=True)
     (package / "__init__.py").write_text("")
-    (assets / "companion.zip").write_bytes(b"synthetic-fixture")
+    (assets / "cases.json").write_bytes(b"synthetic-fixture")
     secret = tmp_path / "secret.txt"
     secret.write_text("do not package")
     (assets / "outside.txt").symlink_to(secret)
     monkeypatch.setattr(backend, "SRC", source)
     wheel = backend.build_wheel(str(tmp_path))
     with ZipFile(tmp_path / wheel) as archive:
-        assert archive.read("llmcheck/demo_assets/companion.zip") == b"synthetic-fixture"
+        assert archive.read("llmcheck/demo_assets/cases.json") == b"synthetic-fixture"
         assert "llmcheck/demo_assets/outside.txt" not in archive.namelist()
 
 
@@ -152,8 +152,8 @@ def test_distribution_boundaries_exclude_hidden_files_and_private_dumps(tmp_path
     for name in ("README.md", "LICENSE", "NOTICE", "pyproject.toml", "build_backend.py"):
         shutil.copyfile(backend.ROOT / name, root / name)
     (package / "__init__.py").write_text("")
-    included = ["demo_assets/cases.json", "demo_assets/live-evaluation.json", "demo_assets/companion.zip"]
-    excluded = [".env", "debug.json", "customer-dump.txt", "capture.db", "untracked.zip", ".private/settings.py", "demo_assets/.env", "demo_assets/private-dump.json"]
+    included = ["demo_assets/cases.json", "demo_assets/live-evaluation.json"]
+    excluded = ["demo_assets/companion.zip", ".env", "debug.json", "customer-dump.txt", "capture.db", "untracked.zip", ".private/settings.py", "demo_assets/.env", "demo_assets/private-dump.json"]
     for name in included + excluded:
         path = package / name
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -197,7 +197,7 @@ def test_editable_install_loads_demo_assets_from_checkout(tmp_path):
         "import sys; sys.path.insert(0, " + repr(str(installed)) + "); "
         "from llmcheck import web_demo; "
         "assert len(web_demo.CASES) == 12; "
-        "assert web_demo.ASSETS.joinpath('companion.zip').is_file(); "
+        "assert not web_demo.ASSETS.joinpath('companion.zip').exists(); "
         "assert web_demo.LIVE_EVALUATION['evaluated_cases'] == 12"
     )
     result = subprocess.run([sys.executable, "-I", "-c", code], cwd=tmp_path, capture_output=True, text=True)
