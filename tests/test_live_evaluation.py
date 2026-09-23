@@ -54,3 +54,11 @@ def test_missing_key_is_local_error(monkeypatch,tmp_path):
     with pytest.raises(ValueError,match='OPENAI_API_KEY'):
         live.evaluate(model='test', output=tmp_path/'out.json', opt_in=True)
     assert not (tmp_path/'out.json').exists()
+
+
+def test_archive_provenance_does_not_require_git(monkeypatch, tmp_path):
+    monkeypatch.setattr(live, "REPO", tmp_path)
+    def forbidden(*args, **kwargs):
+        pytest.fail("archive must not borrow a parent repository revision")
+    monkeypatch.setattr(live.subprocess, "check_output", forbidden)
+    assert live.source_commit() is None

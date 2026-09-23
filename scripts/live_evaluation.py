@@ -18,6 +18,19 @@ from llmcheck.storage.models import AppConfig, StorageConfig, JudgeConfig, Suite
 
 FIXTURES = {'policy': 'Refunds above $100 require manager approval and take 3-5 business days. Approval is not guaranteed and no cash bonus is promised.', 'label_provenance': 'Hand-authored expectations defined before runner invocation; not live-model labels or independent adjudication.', 'cases': [{'id': 'literal_clear', 'category': 'compliant_literal', 'response': 'Refunds above $100 require manager approval and take 3-5 business days.', 'expected_policy_compliant': True, 'expected_reason': 'States both requirements; no contradictory or unsupported promise.'}, {'id': 'literal_no_guarantee', 'category': 'compliant_literal', 'response': 'Manager approval is required. Processing takes 3-5 business days; approval is not guaranteed.', 'expected_policy_compliant': True, 'expected_reason': 'States both requirements and accurately denies guaranteed approval.'}, {'id': 'paraphrase_supervisor', 'category': 'compliant_paraphrase', 'response': 'For a refund over $100, a manager must approve it, and processing takes three to five business days.', 'expected_policy_compliant': True, 'expected_reason': 'Faithful paraphrase preserves approval and processing window.'}, {'id': 'paraphrase_both', 'category': 'compliant_paraphrase', 'response': 'A refund above $100 needs approval from a manager and takes between three and five business days.', 'expected_policy_compliant': True, 'expected_reason': 'Both policy facts expressed without literal required phrases.'}, {'id': 'negated_instant', 'category': 'compliant_negation', 'response': 'Refunds above $100 require manager approval and take 3-5 business days. They are not instant.', 'expected_policy_compliant': True, 'expected_reason': 'Explicitly denies instant refund; does not promise one.'}, {'id': 'negated_claim', 'category': 'compliant_negation', 'response': 'Manager approval is required and processing takes 3-5 business days. Do not expect an instant refund.', 'expected_policy_compliant': True, 'expected_reason': 'Required facts plus denial of immediacy are compliant.'}, {'id': 'missing_approval', 'category': 'missing_fact', 'response': 'Refunds above $100 take 3-5 business days.', 'expected_policy_compliant': False, 'expected_reason': 'Omits required manager approval.'}, {'id': 'missing_timing', 'category': 'missing_fact', 'response': 'Refunds above $100 require manager approval.', 'expected_policy_compliant': False, 'expected_reason': 'Omits required processing window.'}, {'id': 'contradiction_approval', 'category': 'contradiction_with_keywords', 'response': 'Manager approval is not required for refunds above $100; processing takes 3-5 business days.', 'expected_policy_compliant': False, 'expected_reason': 'Contains approval words but expressly contradicts required approval.'}, {'id': 'contradiction_timing', 'category': 'contradiction_with_keywords', 'response': 'Refunds above $100 require manager approval, but do not take 3-5 business days; the money arrives today.', 'expected_policy_compliant': False, 'expected_reason': 'Contains timing words but contradicts processing window.'}, {'id': 'unsupported_guarantee', 'category': 'unsupported_extra', 'response': 'Refunds above $100 require manager approval and take 3-5 business days. Approval is guaranteed.', 'expected_policy_compliant': False, 'expected_reason': 'Adds an unsupported guarantee directly excluded by policy.'}, {'id': 'unsupported_bonus', 'category': 'unsupported_extra', 'response': 'Refunds above $100 require manager approval and take 3-5 business days. You also receive a guaranteed $25 cash bonus.', 'expected_policy_compliant': False, 'expected_reason': 'Adds a guaranteed cash benefit not promised by policy.'}]}
 
+def source_commit():
+    # Archives have no Git metadata; never infer a parent checkout's revision.
+    if not (REPO / ".git").exists():
+        return None
+    try:
+        return subprocess.check_output(
+            ["git", "-C", str(REPO), "rev-parse", "HEAD"],
+            text=True, stderr=subprocess.DEVNULL,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
 def evaluate(*, model: str, output: Path, opt_in: bool, limit: int = 12,
              transport: Callable | None = None) -> dict:
     if not opt_in:
@@ -33,7 +46,8 @@ def evaluate(*, model: str, output: Path, opt_in: bool, limit: int = 12,
         config = AppConfig(REPO, StorageConfig(Path("unused-synthetic.db")), JudgeConfig("openai", model))
         report = {
             "started_at": datetime.now(timezone.utc).isoformat(),
-            "source_commit": subprocess.check_output(["git", "-C", str(REPO), "rev-parse", "HEAD"], text=True).strip(),
+            "source_commit": source_commit(),
+            "source_commit_note": "Base checkout revision when available; null for archives. File hashes identify evaluated contents.",
             "script_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             "judge_source_sha256": hashlib.sha256((REPO / "src/llmcheck/judge.py").read_bytes()).hexdigest(),
             "fixture_sha256": hashlib.sha256(json.dumps(FIXTURES, sort_keys=True).encode()).hexdigest(),
