@@ -1,4 +1,4 @@
-"""Reproducible POC demo: real LLMCheck code, synthetic provider, injected judge.
+"""Offline refund-policy demo: real LLMCheck code, synthetic provider, injected judge.
 No credentials, network requests, or existing user databases are used.
 """
 from pathlib import Path
@@ -10,7 +10,7 @@ import sys, json, io, socket, html, subprocess
 
 import argparse
 parser = argparse.ArgumentParser(description='Offline fixture demo using real LLMCheck APIs; not semantic model evaluation.')
-parser.add_argument('--repo', required=True, type=Path, help='Local LLMCheck checkout (tested at commit6d101ae)')
+parser.add_argument('--repo', default=Path(__file__).resolve().parents[2], type=Path, help='Local LLMCheck checkout (defaults to this checkout)')
 parser.add_argument('--output', required=True, type=Path, help='New or empty output directory; existing evidence is never overwritten')
 args = parser.parse_args()
 REPO = args.repo.resolve()
@@ -94,7 +94,7 @@ for name, output, expected in scenarios:
 review=build_pilot_review(run,severity='low',root_cause='prompt_or_instruction_failure',review_outcome='confirmed_failure',business_impact='low',candidate_knowledge_type='none',reviewer_note='SYNTHETIC POC fixture; scripted failure and scripted classification, not a customer incident.')
 save_pilot_review(db,review)
 commit=subprocess.check_output(['git','-C',str(REPO),'rev-parse','HEAD'],text=True).strip()
-(ROOT/'provenance.json').write_text(json.dumps({'repository':str(REPO),'commit':commit,'live_model_calls':0,'network_during_demo':'TCP connect functions blocked','fixture_scenarios':len(results),'tested_reference_commit':'6d101ae90781b8dc06965f57313445f8878cf6d6','reference_commit_matches':commit=='6d101ae90781b8dc06965f57313445f8878cf6d6','expected_outcomes_verified':True,'review':'scripted; generated draft explicitly edited to atomic checks','limits':['No live model or semantic judge evaluated','No production/adoption/performance claims','Captured latency measures local fake execution only','Dashboard metrics represent one synthetic incident']},indent=2))
+(ROOT/'provenance.json').write_text(json.dumps({'repository':str(REPO),'commit':commit,'live_model_calls':0,'network_during_demo':'TCP connect functions blocked','fixture_scenarios':len(results),'expected_outcomes_verified':True,'review':'scripted; generated draft explicitly edited to atomic checks','limits':['No live model or semantic judge evaluated','No production/adoption/performance claims','Captured latency measures local fake execution only','Dashboard metrics represent one synthetic incident']},indent=2))
 
 print('PASS: capture, SQLite persistence, generated/reviewed YAML and four expected replay outcomes.')
 print('Synthetic provider and injected literal judge; no live model calls.')

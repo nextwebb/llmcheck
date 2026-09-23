@@ -1,5 +1,0 @@
-storage:
-  path: probe.db
-judge:
-  provider: openai
-  model: unused-offline-probe

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from openai import OpenAI
 
-from llmcheck import add_context, add_tags, flag, instrument_openai
+from llmcheck import add_context, add_tags, instrument_openai
 
 
 class FakeRetriever:
@@ -27,11 +27,11 @@ def answer_user(query: str, session_id: str = "demo-session") -> str:
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are a support agent."},
+            {"role": "system", "content": "Answer using this refund policy:\n" + "\n".join(doc["text"] for doc in docs)},
             {"role": "user", "content": query},
         ],
     )
     text = response.choices[0].message.content
-    if "instant" in text.lower():
-        flag(reason="claimed instant refund")
+    # Review the captured response with `llmcheck review --latest`.
+    # A word match cannot distinguish a promise from "not instant".
     return text

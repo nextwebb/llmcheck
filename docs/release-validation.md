@@ -2,7 +2,7 @@
 
 Validation date: 23 September 2026. This is a small local developer tool plus a finite public demonstration, not a hosted multi-user evaluation service.
 
-## Fixed since the article's 0.3.0 baseline
+## Fixed since 0.3.0
 
 - Draft generation no longer interprets quotation marks as forbidden claims. The correction remains in the rubric; reviewers explicitly author phrase lists.
 - Empty suites and asynchronous runner outputs raise actionable errors rather than produce misleading results.
@@ -25,7 +25,6 @@ The evidence records the baseline Git commit plus the exact judge and evaluation
 
 The Render demo uses only bundled synthetic fixtures and recorded evaluation evidence. No provider key is deployed. It accepts no visitor prompts, database uploads or arbitrary runner code. Core APIs execute a fixed local fixture suite; results are cached after startup. Render free storage is ephemeral and services may sleep. Persistent capture belongs to the installed local product.
 
-The article companion download reproduces the original 0.3.0 article; its README pins that revision. This preserves the historical defect reproduction while 0.4.0 repairs it. No claim that the old defect persists in the new release is warranted.
 
 ## Not established
 
@@ -33,4 +32,4 @@ Broad provider support, streaming capture, multi-user hosting, semantic memory q
 
 ## Deployment verification
 
-The free Render service at https://llmcheck-demo.onrender.com deployed commit `ce91167` successfully. Public `/healthz` returned version `0.4.0`; the downloaded companion SHA256 matched the bundled archive (`fb9eacc29b4a265fa5c995a189f5bf4324a24d35f352ecbcdc8748299c8f6b56`). Browser verification confirmed recorded-mode case selection and the preserved negation false failure. The local suite passed 53 tests. These checks verify the stated paths, not general production readiness.
+The free Render service at https://llmcheck-demo.onrender.com deployed commit `ce91167` successfully. Public `/healthz` returned version `0.4.0`. Browser verification confirmed recorded-mode case selection and the preserved negation false failure. The local suite passed 53 tests. These checks verify the stated paths, not general production readiness.

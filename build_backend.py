@@ -112,9 +112,9 @@ def _csv_bytes(rows: list[tuple[str, str, str]]) -> bytes:
     return buf.getvalue().encode("utf-8")
 
 
-DEMO_ASSETS = {"companion.zip", "cases.json", "live-evaluation.json"}
+DEMO_ASSETS = {"cases.json", "live-evaluation.json"}
 SDIST_DOCS = {
-    "docs/reference.md", "docs/release-validation.md", "docs/agentic-poc-testing.md",
+    "docs/reference.md", "docs/release-validation.md",
     "docs/assets/llmcheck-demo.gif",
 }
 

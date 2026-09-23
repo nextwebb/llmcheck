@@ -1,9 +1,9 @@
-"""Run the offline companion, inspect artifacts, and verify overwrite protection."""
+"""Run the offline refund-policy, inspect artifacts, and verify overwrite protection."""
 from pathlib import Path
 import argparse,json,subprocess,sys,tempfile,os
 p=argparse.ArgumentParser();p.add_argument('--repo',required=True,type=Path);args=p.parse_args()
 root=Path(__file__).resolve().parent
-with tempfile.TemporaryDirectory(prefix='companion-smoke-') as tmp:
+with tempfile.TemporaryDirectory(prefix='refund-policy-smoke-') as tmp:
  out=Path(tmp)/'evidence'
  cmd=[sys.executable,str(root/'offline_demo.py'),'--repo',str(args.repo.resolve()),'--output',str(out)]
  env={'PATH':os.environ.get('PATH','/usr/bin:/bin'),'PYTHONDONTWRITEBYTECODE':'1'}
