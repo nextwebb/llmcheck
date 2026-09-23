@@ -30,3 +30,7 @@ The article companion download reproduces the original 0.3.0 article; its README
 ## Not established
 
 Broad provider support, streaming capture, multi-user hosting, semantic memory quality, confidence calibration, independent human benchmarking and production suitability remain outside the release claim. Licensing must be selected by the copyright owner before an open-source release is declared.
+
+## Deployment verification
+
+The free Render service at https://llmcheck-demo.onrender.com deployed commit `ce91167` successfully. Public `/healthz` returned version `0.4.0`; the downloaded companion SHA256 matched the bundled archive (`fb9eacc29b4a265fa5c995a189f5bf4324a24d35f352ecbcdc8748299c8f6b56`). Browser verification confirmed recorded-mode case selection and the preserved negation false failure. The local suite passed 53 tests. These checks verify the stated paths, not general production readiness.

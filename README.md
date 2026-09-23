@@ -14,7 +14,7 @@ After installing from a checkout or built wheel:
 python -m llmcheck.web_demo
 ```
 
-Open the address printed by the command. The demo lets you select fixed synthetic cases and inspect locally calculated verdicts through a read-only interface. It needs no API key, accepts no private application data, and does not evaluate your application. It is separate from the pilot dashboard, which reads a local workspace. There is no verified hosted demo URL in this release candidate.
+Open the address printed by the command. The demo lets you select fixed synthetic cases and inspect locally calculated verdicts through a read-only interface. It needs no API key, accepts no private application data, and does not evaluate your application. It is separate from the pilot dashboard, which reads a local workspace. Try the [hosted demo](https://llmcheck-demo.onrender.com). It includes a clearly labelled recorded OpenAI evaluation alongside the literal fixture judge. Render’s free instance may take time to wake after inactivity.
 
 ![LLMCheck workflow demonstration](docs/assets/llmcheck-demo.gif)
 
@@ -23,7 +23,7 @@ Open the address printed by the command. The demo lets you select fixed syntheti
 Python 3.10 or later is required. Start in a virtual environment:
 
 ```bash
-git clone https://github.com/nextwebb/llmcheck.git
+git clone --branch release/0.4.0 https://github.com/nextwebb/llmcheck.git
 cd llmcheck
 python3 -m venv .venv
 source .venv/bin/activate
