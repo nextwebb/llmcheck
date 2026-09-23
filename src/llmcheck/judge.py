@@ -43,6 +43,8 @@ def build_judge_prompt(test: SuiteTestCase, output_text: str) -> str:
 
 
 def parse_judge_response(payload_text: str) -> JudgeResult:
+    if not isinstance(payload_text, str):
+        raise JudgeError("judge response must be JSON text")
     try:
         payload = json.loads(payload_text)
     except json.JSONDecodeError as exc:
@@ -60,7 +62,7 @@ def parse_judge_response(payload_text: str) -> JudgeResult:
     confidence = payload.get("confidence")
     if not isinstance(reason, str):
         raise JudgeError("judge response missing valid `reason`")
-    if confidence not in {"high", "medium", "low"}:
+    if not isinstance(confidence, str) or confidence not in {"high", "medium", "low"}:
         raise JudgeError("judge response missing valid `confidence`")
 
     return JudgeResult(
@@ -82,6 +84,7 @@ def _call_openai_judge(config: AppConfig, prompt: str) -> str:
     payload = {
         "model": config.judge.model,
         "temperature": 0,
+        "max_completion_tokens": 512,
         "messages": [
             {"role": "system", "content": "Return only valid JSON."},
             {"role": "user", "content": prompt},
@@ -104,9 +107,19 @@ def _call_openai_judge(config: AppConfig, prompt: str) -> str:
         raise JudgeError(f"judge HTTP error {exc.code}: {body}") from exc
     except urllib.error.URLError as exc:
         raise JudgeError(f"judge network error: {exc.reason}") from exc
+    except (TimeoutError, OSError) as exc:
+        raise JudgeError(f"judge network error: {exc}") from exc
+    except (json.JSONDecodeError, UnicodeError) as exc:
+        raise JudgeError("judge returned an invalid response body") from exc
 
-    choice = (data.get("choices") or [{}])[0]
-    message = choice.get("message") or {}
+    if not isinstance(data, dict):
+        raise JudgeError("judge response envelope must be an object")
+    choices = data.get("choices")
+    if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+        raise JudgeError("judge response missing valid choices")
+    message = choices[0].get("message")
+    if not isinstance(message, dict):
+        raise JudgeError("judge response missing valid message")
     content = message.get("content", "")
     if isinstance(content, list):
         content = "\n".join(str(item.get("text", "")) for item in content if isinstance(item, dict))

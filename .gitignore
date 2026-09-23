@@ -6,3 +6,8 @@ __pycache__/
 .llmcheck/agentic-poc-sessions.json
 .llmcheck/agentic-*.log
 .env
+
+.llmcheck/
+.cursor/
+dist/
+build/

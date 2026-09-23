@@ -3,6 +3,8 @@ from __future__ import annotations
 import base64
 import csv
 import hashlib
+import re
+import tarfile
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -10,7 +12,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "src"
 PROJECT = "llmcheck"
-VERSION = "0.3.0"
+VERSION = re.search(r'^version = "([^"]+)"', (ROOT / "pyproject.toml").read_text(), re.MULTILINE).group(1)
 
 
 def _dist_info_dir() -> str:
@@ -31,6 +33,10 @@ def _metadata_text() -> str:
         "Requires-Dist: PyYAML>=6.0\n"
         "Provides-Extra: test\n"
         'Requires-Dist: pytest>=8.0; extra == "test"\n'
+        "Description-Content-Type: text/markdown\n"
+        "Project-URL: Source, https://github.com/nextwebb/llmcheck\n"
+        "\n"
+        + (ROOT / "README.md").read_text(encoding="utf-8")
     )
 
 
@@ -103,7 +109,10 @@ def _csv_bytes(rows: list[tuple[str, str, str]]) -> bytes:
 
 
 def build_wheel(wheel_directory: str, config_settings=None, metadata_directory=None) -> str:
-    return _write_wheel(wheel_directory, _editable_wheel_contents())
+    files = [(str(p.relative_to(SRC)), p.read_bytes()) for p in sorted((SRC / PROJECT).rglob("*"))
+             if p.is_file() and not p.is_symlink() and "__pycache__" not in p.parts and p.suffix != ".pyc"]
+    files.extend((name, data) for name, data in _editable_wheel_contents() if name.startswith(_dist_info_dir() + "/"))
+    return _write_wheel(wheel_directory, files)
 
 
 def build_editable(wheel_directory: str, config_settings=None, metadata_directory=None) -> str:
@@ -141,4 +150,24 @@ def get_requires_for_build_sdist(config_settings=None) -> list[str]:
 
 
 def build_sdist(sdist_directory: str, config_settings=None) -> str:
-    raise NotImplementedError("sdist build is not implemented for this local backend")
+    destination = Path(sdist_directory)
+    destination.mkdir(parents=True, exist_ok=True)
+    prefix = f"{PROJECT}-{VERSION}"
+    target = destination / f"{prefix}.tar.gz"
+    root_names = {"pyproject.toml", "build_backend.py", "README.md", "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", "LICENSE", "LICENSE.md", "LICENSE.txt"}
+    with tarfile.open(target, "w:gz") as archive:
+        for path in sorted(ROOT.rglob("*")):
+            relative = path.relative_to(ROOT)
+            if not path.is_file() or path.is_symlink():
+                continue
+            if relative.parts[0] not in {"src", "tests", "docs"} and str(relative) not in root_names:
+                continue
+            if any(part.startswith(".") or part == "__pycache__" for part in relative.parts) or path.suffix in {".pyc", ".db", ".sqlite", ".sqlite3"}:
+                continue
+            archive.add(path, arcname=f"{prefix}/{relative}", recursive=False)
+        import io
+        metadata = _metadata_text().encode("utf-8")
+        info = tarfile.TarInfo(f"{prefix}/PKG-INFO")
+        info.size = len(metadata)
+        archive.addfile(info, io.BytesIO(metadata))
+    return target.name

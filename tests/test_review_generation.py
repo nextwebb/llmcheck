@@ -46,8 +46,8 @@ def test_draft_generation_produces_yaml_with_required_fields() -> None:
     text = dump_regression_case(draft)
     payload = yaml.safe_load(text)
     assert payload["source_run_id"] == "run_123"
-    assert payload["expected"]["must_include"] == ['Mention manager approval and avoid "instant".']
-    assert payload["expected"]["must_not_claim"] == ["instant"]
+    assert payload["expected"]["must_include"] == []
+    assert payload["expected"]["must_not_claim"] == []
     assert payload["judge"]["pass_if"]
 
 
@@ -82,3 +82,15 @@ def test_rejected_review_does_not_append_to_suite(monkeypatch, tmp_path: Path) -
     assert code == 0
     payload = yaml.safe_load(suite_path.read_text(encoding="utf-8"))
     assert payload["tests"] == []
+
+
+def test_free_form_corrections_remain_rubrics_without_guessed_polarity():
+    for correction in [
+        'Include "manager approval".',
+        'Do not claim "instant".',
+        'Include "manager approval" but avoid "instant".',
+        'Explain why "instant" is inaccurate.',
+    ]:
+        draft = draft_regression_case(_run_record(), correction)
+        assert draft["expected"] == {"must_include": [], "must_not_claim": []}
+        assert draft["judge"]["pass_if"] == correction

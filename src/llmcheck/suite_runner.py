@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import inspect
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -39,8 +40,8 @@ def import_callable(path: str, *, working_dir: Path | None = None) -> Callable[.
     try:
         with _prepend_import_path(working_dir or Path.cwd()):
             module = importlib.import_module(module_name)
-    except ImportError as exc:
-        raise SuiteRunError(f"could not import module `{module_name}`") from exc
+    except Exception as exc:
+        raise SuiteRunError(f"could not import module `{module_name}`: {exc}") from exc
     try:
         func = getattr(module, func_name)
     except AttributeError as exc:
@@ -67,6 +68,8 @@ def run_suite(config: AppConfig, suite_path, *, judge_transport=None) -> SuiteRu
     suite = load_suite(suite_path)
     suite_path = Path(suite_path)
     runner = import_callable(suite.runner.callable, working_dir=suite_path.parent)
+    if not suite.tests:
+        raise SuiteRunError("suite contains no tests; add a reviewed case before running")
     results: list[SuiteTestResult] = []
 
     for test in suite.tests:
@@ -74,6 +77,10 @@ def run_suite(config: AppConfig, suite_path, *, judge_transport=None) -> SuiteRu
             output = runner(**test.inputs)
         except Exception as exc:  # noqa: BLE001
             raise SuiteRunError(f"runner callable failed for `{test.id}`: {exc}") from exc
+        if inspect.isawaitable(output):
+            if inspect.iscoroutine(output):
+                output.close()
+            raise SuiteRunError(f"runner callable for `{test.id}` returned an awaitable; use a synchronous adapter")
         output_text = _coerce_output_text(output)
         try:
             judge_result = evaluate_output(config, test, output_text, transport=judge_transport)

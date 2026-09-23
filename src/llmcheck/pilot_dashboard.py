@@ -108,8 +108,9 @@ def _build_index_html() -> str:
     const knowledgeNode = document.getElementById('knowledge');
     const killNode = document.getElementById('killtest');
 
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[ch]));
     const pct = (v) => `${Math.round((v || 0) * 100)}%`;
-    const card = (k, v) => `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+    const card = (k, v) => `<div class="card"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v)}</div></div>`;
 
     async function refresh() {
       const res = await fetch('/api/pilot', { cache: 'no-store' });
@@ -127,27 +128,27 @@ def _build_index_html() -> str:
       const reviews = data.reviews || [];
       reviewsNode.innerHTML = reviews.length ? reviews.map(r => `
         <tr>
-          <td><code>${r.run_id}</code><div class="small">${r.created_at}</div></td>
-          <td>${r.workflow}</td>
-          <td>${r.root_cause}${r.missing_context_subtype ? `<div class="small">${r.missing_context_subtype}</div>` : ''}</td>
-          <td>${r.review_outcome}</td>
+          <td><code>${escapeHtml(r.run_id)}</code><div class="small">${escapeHtml(r.created_at)}</div></td>
+          <td>${escapeHtml(r.workflow)}</td>
+          <td>${escapeHtml(r.root_cause)}${r.missing_context_subtype ? `<div class="small">${escapeHtml(r.missing_context_subtype)}</div>` : ''}</td>
+          <td>${escapeHtml(r.review_outcome)}</td>
           <td>${r.reusable_pattern ? '<span class="badge ok">yes</span>' : 'no'}</td>
-          <td>${r.candidate_knowledge_type}${r.knowledge_approved ? '<div class="small">approved</div>' : ''}</td>
+          <td>${escapeHtml(r.candidate_knowledge_type)}${r.knowledge_approved ? '<div class="small">approved</div>' : ''}</td>
         </tr>`).join('') : '<tr><td colspan="6" class="small">No pilot reviews yet.</td></tr>';
 
       const knowledge = data.knowledge || [];
       knowledgeNode.innerHTML = knowledge.length ? knowledge.map(k => `
         <tr>
-          <td>${k.knowledge_type}</td>
-          <td><strong>${k.title}</strong><div class="small">${k.confidence}</div></td>
-          <td>${(k.usage_modes || []).join(', ')}</td>
+          <td>${escapeHtml(k.knowledge_type)}</td>
+          <td><strong>${escapeHtml(k.title)}</strong><div class="small">${escapeHtml(k.confidence)}</div></td>
+          <td>${escapeHtml((k.usage_modes || []).join(', '))}</td>
         </tr>`).join('') : '<tr><td colspan="3" class="small">No approved knowledge entries yet.</td></tr>';
 
       killNode.innerHTML = `
         <div>- Missing context share should be meaningfully high or the memory story is weak.</div>
         <div>- Reusable pattern share should be high enough to justify operationalization.</div>
         <div>- Knowledge approval rate should stay high, or reviewer output is too noisy.</div>
-        <div class="small">Updated ${data.generated_at || 'unknown'}</div>
+        <div class="small">Updated ${escapeHtml(data.generated_at || 'unknown')}</div>
       `;
     }
 
@@ -167,24 +168,24 @@ def serve_pilot_dashboard(storage_path: Path, host: str, port: int) -> None:
             *,
             body: bool = True,
         ) -> None:
-            body = json.dumps(payload, ensure_ascii=True).encode("utf-8")
+            encoded = json.dumps(payload, ensure_ascii=True).encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Content-Length", str(len(encoded)))
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
             if body:
-                self.wfile.write(body)
+                self.wfile.write(encoded)
 
         def _write_html(self, html: str, status: HTTPStatus = HTTPStatus.OK, *, body: bool = True) -> None:
-            body = html.encode("utf-8")
+            encoded = html.encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Content-Length", str(len(encoded)))
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
             if body:
-                self.wfile.write(body)
+                self.wfile.write(encoded)
 
         def _pilot_payload(self) -> dict[str, Any]:
             reviews = list_pilot_reviews(storage_path, limit=200)

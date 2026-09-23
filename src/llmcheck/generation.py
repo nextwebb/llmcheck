@@ -23,16 +23,11 @@ def _extract_inputs(run: RunRecord) -> dict[str, Any]:
     return {"query": ""}
 
 
-def _extract_must_not_claim(correction_text: str) -> list[str]:
-    matches = re.findall(r'"([^"]+)"', correction_text)
-    return [m.strip() for m in matches if m.strip()]
-
-
 def draft_regression_case(run: RunRecord, correction_text: str) -> dict[str, Any]:
     query = str(_extract_inputs(run).get("query", "")).strip()
     id_seed = query or run.id
-    must_not_claim = _extract_must_not_claim(correction_text)
-    must_include = [correction_text.strip()] if correction_text.strip() else []
+    # Free-form feedback belongs in the rubric. Quotation marks do not encode
+    # polarity, and an instruction is not necessarily text the answer must emit.
     pass_if = correction_text.strip() or "The answer should satisfy the approved correction."
 
     return {
@@ -46,8 +41,8 @@ def draft_regression_case(run: RunRecord, correction_text: str) -> dict[str, Any
         "inputs": _extract_inputs(run),
         "context": run.context,
         "expected": {
-            "must_include": must_include,
-            "must_not_claim": must_not_claim,
+            "must_include": [],
+            "must_not_claim": [],
         },
         "judge": {
             "type": "rubric",

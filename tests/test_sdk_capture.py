@@ -151,3 +151,76 @@ def test_instrument_openai_applies_approved_knowledge_to_later_runs(tmp_path: Pa
             "titles": ["refund approval requirement"],
         },
     ]
+
+
+def test_failed_provider_attempt_consumes_context_and_tags(tmp_path, capsys):
+    import pytest
+    db = tmp_path / 'failure.db'
+    calls = 0
+    def create(**kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError('provider fixture failure')
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='ok'))])
+    client = FakeClient()
+    client.chat.completions.create = create
+    instrument_openai(client, storage_path=db)
+    client.chat.completions.create(messages=[{'role':'user', 'content':'previous'}])
+    previous = list_runs(db)[0]
+    add_context(['failed-call-only'])
+    add_tags({'attempt': 'failed'})
+    with pytest.raises(RuntimeError, match='provider fixture failure'):
+        client.chat.completions.create(messages=[{'role':'user', 'content':'fail'}])
+    flag('must not flag previous')
+    assert not get_run(db, previous.id).flagged
+    assert 'no captured run' in capsys.readouterr().err
+    client.chat.completions.create(messages=[{'role':'user', 'content':'next'}])
+    next_run = list_runs(db)[0]
+    assert next_run.context == [] and next_run.tags == {}
+
+
+def test_storage_failure_preserves_success_and_clears_flag_target(tmp_path, monkeypatch, capsys):
+    import llmcheck.sdk.openai as sdk
+    db = tmp_path / 'storage-failure.db'
+    response = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='ok'))])
+    client = FakeClient()
+    client.chat.completions.create = lambda **kwargs: response
+    instrument_openai(client, storage_path=db)
+    client.chat.completions.create(messages=[{'role':'user', 'content':'previous'}])
+    previous = list_runs(db)[0]
+    original = sdk.save_run
+    def broken_save(*args):
+        raise OSError('SENSITIVE fixture body')
+    monkeypatch.setattr(sdk, 'save_run', broken_save)
+    add_context(['uncaptured context'])
+    add_tags({'attempt': 'uncaptured'})
+    assert client.chat.completions.create(messages=[{'role':'user', 'content':'current'}]) is response
+    warning = capsys.readouterr().err
+    assert 'local capture failed' in warning and 'SENSITIVE' not in warning
+    flag('must not flag previous')
+    assert not get_run(db, previous.id).flagged
+    assert 'no captured run' in capsys.readouterr().err
+    monkeypatch.setattr(sdk, 'save_run', original)
+    client.chat.completions.create(messages=[{'role':'user', 'content':'next'}])
+    next_run = list_runs(db)[0]
+    assert next_run.context == [] and next_run.tags == {}
+
+
+def test_retrieval_failure_consumes_both_pending_fields(tmp_path, monkeypatch):
+    import pytest
+    import llmcheck.sdk.openai as sdk
+    db = tmp_path / 'retrieval-failure.db'
+    client = instrument_openai(FakeClient(), storage_path=db)
+    original = sdk.apply_retrieval_policy
+    def broken_retrieval(*args, **kwargs):
+        raise OSError('retrieval unavailable')
+    add_context(['first attempt'])
+    add_tags({'attempt': 'first'})
+    monkeypatch.setattr(sdk, 'apply_retrieval_policy', broken_retrieval)
+    with pytest.raises(OSError):
+        client.chat.completions.create(messages=[{'role':'user', 'content':'fail'}])
+    monkeypatch.setattr(sdk, 'apply_retrieval_policy', original)
+    client.chat.completions.create(messages=[{'role':'user', 'content':'next'}])
+    run = list_runs(db)[0]
+    assert run.context == [] and run.tags == {}
