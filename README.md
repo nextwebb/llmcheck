@@ -18,12 +18,16 @@ Open the address printed by the command. The demo lets you select fixed syntheti
 
 ![LLMCheck workflow demonstration](docs/assets/llmcheck-demo.gif)
 
+## Article examples
+
+Browse the [article reproduction scripts and instructions](examples/article/README.md) directly in this repository. They include the offline capture/review/replay demo, result inspector, twelve-case experiment and gate probes. Use the documented historical checkout to reproduce the article figures; no separate ZIP is needed. The [interactive case explorer](https://llmcheck-demo.onrender.com/#explorer) lets you inspect the twelve synthetic cases in your browser.
+
 ## Install
 
 Python 3.10 or later is required. Start in a virtual environment:
 
 ```bash
-git clone --branch release/0.4.0 https://github.com/nextwebb/llmcheck.git
+git clone --branch main https://github.com/nextwebb/llmcheck.git
 cd llmcheck
 python3 -m venv .venv
 source .venv/bin/activate

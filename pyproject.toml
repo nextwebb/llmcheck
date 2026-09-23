@@ -29,3 +29,6 @@ llmcheck = "llmcheck.cli:main"
 [project.urls]
 Source = "https://github.com/nextwebb/llmcheck"
 Issues = "https://github.com/nextwebb/llmcheck/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
