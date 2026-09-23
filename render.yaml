@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: llmcheck-demo
+    runtime: python
+    plan: free
+    buildCommand: pip install .
+    startCommand: python -m llmcheck.web_demo --host 0.0.0.0
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8

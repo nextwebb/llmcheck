@@ -77,3 +77,8 @@ def consume_pending_tags() -> dict[str, Any]:
 
 def set_last_run(run_id: str, storage_path: Path) -> None:
     _last_run.set(LastRunRef(run_id=run_id, storage_path=storage_path))
+
+
+def clear_last_run() -> None:
+    """Prevent a failed or uncaptured attempt from flagging an older response."""
+    _last_run.set(None)

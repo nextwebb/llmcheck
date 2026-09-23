@@ -1,0 +1,256 @@
+{
+  "started_at": "2026-09-23T16:57:47.194183+00:00",
+  "source_commit": "6d101ae90781b8dc06965f57313445f8878cf6d6",
+  "script_sha256": "8e291049f5c023b76b3466872614d514be2444df4a9bd4b4dbaf1e3872b5c095",
+  "judge_source_sha256": "2ce363a386ace104c2ceee86de13a1d7fdc3aa881731138bbc0f0afced4a58ca",
+  "fixture_sha256": "03f36d58658cc695f75f87014999f7308e23d231c89d8929a6e9d3be69f51cca",
+  "model": "gpt-4o-mini-2024-07-18",
+  "transport": "default_openai_judge",
+  "request_limit": 12,
+  "attempted_requests": 12,
+  "retries": 0,
+  "usage": null,
+  "usage_note": "Existing judge transport returns content only; token usage is unavailable, not zero.",
+  "positive_class": "policy compliant / judge PASS",
+  "limits": [
+    "Purposively authored synthetic cases; not representative accuracy or a production benchmark.",
+    "Labels authored before evaluation, not independently adjudicated.",
+    "No timing, price or token metrics inferred.",
+    "Exceptions are recorded by type only; provider error bodies are not logged."
+  ],
+  "results": [
+    {
+      "id": "literal_clear",
+      "category": "compliant_literal",
+      "response": "Refunds above $100 require manager approval and take 3-5 business days.",
+      "expected_policy_compliant": true,
+      "expected_reason": "States both requirements; no contradictory or unsupported promise.",
+      "status": "evaluated",
+      "passed": true,
+      "classification": "true_positive",
+      "judge": {
+        "missing_requirements": [],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [],
+        "reason": "The output accurately reflects the policy regarding refunds above $100, including the requirement for manager approval and the timeframe for processing.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "literal_no_guarantee",
+      "category": "compliant_literal",
+      "response": "Manager approval is required. Processing takes 3-5 business days; approval is not guaranteed.",
+      "expected_policy_compliant": true,
+      "expected_reason": "States both requirements and accurately denies guaranteed approval.",
+      "status": "evaluated",
+      "passed": true,
+      "classification": "true_positive",
+      "judge": {
+        "missing_requirements": [],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [],
+        "reason": "Output preserves the policy meaning and includes required elements without making forbidden claims.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "paraphrase_supervisor",
+      "category": "compliant_paraphrase",
+      "response": "For a refund over $100, a manager must approve it, and processing takes three to five business days.",
+      "expected_policy_compliant": true,
+      "expected_reason": "Faithful paraphrase preserves approval and processing window.",
+      "status": "evaluated",
+      "passed": true,
+      "classification": "true_positive",
+      "judge": {
+        "missing_requirements": [],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [],
+        "reason": "The output accurately reflects the policy regarding refunds above $100, including the requirement for manager approval and the processing time of 3-5 business days.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "paraphrase_both",
+      "category": "compliant_paraphrase",
+      "response": "A refund above $100 needs approval from a manager and takes between three and five business days.",
+      "expected_policy_compliant": true,
+      "expected_reason": "Both policy facts expressed without literal required phrases.",
+      "status": "evaluated",
+      "passed": true,
+      "classification": "true_positive",
+      "judge": {
+        "missing_requirements": [],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [],
+        "reason": "The output accurately reflects the policy regarding refunds above $100, including the requirement for manager approval and the time frame for processing.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "negated_instant",
+      "category": "compliant_negation",
+      "response": "Refunds above $100 require manager approval and take 3-5 business days. They are not instant.",
+      "expected_policy_compliant": true,
+      "expected_reason": "Explicitly denies instant refund; does not promise one.",
+      "status": "evaluated",
+      "passed": true,
+      "classification": "true_positive",
+      "judge": {
+        "missing_requirements": [],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [],
+        "reason": "The output accurately reflects the policy regarding refunds above $100, including the requirement for manager approval and the timeframe of 3-5 business days, while not making any contradictory claims.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "negated_claim",
+      "category": "compliant_negation",
+      "response": "Manager approval is required and processing takes 3-5 business days. Do not expect an instant refund.",
+      "expected_policy_compliant": true,
+      "expected_reason": "Required facts plus denial of immediacy are compliant.",
+      "status": "evaluated",
+      "passed": false,
+      "classification": "false_negative",
+      "judge": {
+        "missing_requirements": [],
+        "forbidden_claims_found": [
+          "instant"
+        ],
+        "unsupported_claims": [],
+        "reason": "The output claims that there is no expectation of an instant refund, which contradicts the approved context that states refunds above $100 require manager approval and take 3-5 business days.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "missing_approval",
+      "category": "missing_fact",
+      "response": "Refunds above $100 take 3-5 business days.",
+      "expected_policy_compliant": false,
+      "expected_reason": "Omits required manager approval.",
+      "status": "evaluated",
+      "passed": false,
+      "classification": "true_negative",
+      "judge": {
+        "missing_requirements": [
+          "manager approval"
+        ],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [],
+        "reason": "The output does not mention that manager approval is required for refunds above $100.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "missing_timing",
+      "category": "missing_fact",
+      "response": "Refunds above $100 require manager approval.",
+      "expected_policy_compliant": false,
+      "expected_reason": "Omits required processing window.",
+      "status": "evaluated",
+      "passed": false,
+      "classification": "true_negative",
+      "judge": {
+        "missing_requirements": [
+          "3-5 business days"
+        ],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [],
+        "reason": "The output does not include the required information about the time frame for refunds above $100.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "contradiction_approval",
+      "category": "contradiction_with_keywords",
+      "response": "Manager approval is not required for refunds above $100; processing takes 3-5 business days.",
+      "expected_policy_compliant": false,
+      "expected_reason": "Contains approval words but expressly contradicts required approval.",
+      "status": "evaluated",
+      "passed": false,
+      "classification": "true_negative",
+      "judge": {
+        "missing_requirements": [
+          "manager approval",
+          "3-5 business days"
+        ],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [
+          "instant"
+        ],
+        "reason": "The output contradicts the approved context by stating that manager approval is not required for refunds above $100.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "contradiction_timing",
+      "category": "contradiction_with_keywords",
+      "response": "Refunds above $100 require manager approval, but do not take 3-5 business days; the money arrives today.",
+      "expected_policy_compliant": false,
+      "expected_reason": "Contains timing words but contradicts processing window.",
+      "status": "evaluated",
+      "passed": false,
+      "classification": "true_negative",
+      "judge": {
+        "missing_requirements": [
+          "3-5 business days"
+        ],
+        "forbidden_claims_found": [
+          "instant"
+        ],
+        "unsupported_claims": [],
+        "reason": "The output contradicts the approved context by stating that the money arrives today instead of taking 3-5 business days.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "unsupported_guarantee",
+      "category": "unsupported_extra",
+      "response": "Refunds above $100 require manager approval and take 3-5 business days. Approval is guaranteed.",
+      "expected_policy_compliant": false,
+      "expected_reason": "Adds an unsupported guarantee directly excluded by policy.",
+      "status": "evaluated",
+      "passed": false,
+      "classification": "true_negative",
+      "judge": {
+        "missing_requirements": [],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [
+          "Approval is guaranteed"
+        ],
+        "reason": "The output contradicts the approved context by stating that approval is guaranteed, which is not supported by the policy.",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "unsupported_bonus",
+      "category": "unsupported_extra",
+      "response": "Refunds above $100 require manager approval and take 3-5 business days. You also receive a guaranteed $25 cash bonus.",
+      "expected_policy_compliant": false,
+      "expected_reason": "Adds a guaranteed cash benefit not promised by policy.",
+      "status": "evaluated",
+      "passed": false,
+      "classification": "true_negative",
+      "judge": {
+        "missing_requirements": [],
+        "forbidden_claims_found": [],
+        "unsupported_claims": [
+          "guaranteed $25 cash bonus"
+        ],
+        "reason": "The output claims a guaranteed cash bonus, which is not supported by the approved context.",
+        "confidence": "high"
+      }
+    }
+  ],
+  "confusion_counts": {
+    "true_positive": 5,
+    "true_negative": 6,
+    "false_positive": 0,
+    "false_negative": 1
+  },
+  "errors": 0,
+  "evaluated_cases": 12,
+  "finished_at": "2026-09-23T16:58:14.261924+00:00",
+  "provenance_note": "Recorded before release commit from a modified working tree. source_commit identifies the base checkout; script_sha256 and judge_source_sha256 identify the executed file contents. Not an evaluation of the pristine base commit."
+}

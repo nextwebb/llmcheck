@@ -5,9 +5,11 @@ backend-path = ["."]
 
 [project]
 name = "llmcheck"
-version = "0.3.0"
+version = "0.4.0"
 description = "Turn bad LLM/RAG runs into local regression checks for CI"
 readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.10"
 authors = [
   { name = "LLMCheck" }
@@ -23,3 +25,7 @@ test = [
 
 [project.scripts]
 llmcheck = "llmcheck.cli:main"
+
+[project.urls]
+Source = "https://github.com/nextwebb/llmcheck"
+Issues = "https://github.com/nextwebb/llmcheck/issues"
