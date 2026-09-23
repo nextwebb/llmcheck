@@ -79,6 +79,8 @@ def test_sdist_rebuilds_away_from_checkout_and_excludes_workspace_data(tmp_path)
             assert not member.name.startswith("/") and ".." not in Path(member.name).parts
         archive.extractall(extracted)
     source = next(extracted.iterdir())
+    collected = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q"], cwd=source, capture_output=True, text=True)
+    assert collected.returncode == 0, collected.stdout + collected.stderr
     target = tmp_path / "rebuilt"
     result = subprocess.run([sys.executable, "-c", "import build_backend; print(build_backend.build_wheel(" + repr(str(target)) + "))"], cwd=source, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr

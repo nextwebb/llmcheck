@@ -199,6 +199,7 @@ def build_sdist(sdist_directory: str, config_settings=None) -> str:
         candidates.update(ROOT / name for name in SDIST_DOCS)
         candidates.update((ROOT / "tests").glob("test_*.py"))
         candidates.add(ROOT / "tests" / "conftest.py")
+        candidates.add(ROOT / "scripts" / "live_evaluation.py")
         for path in sorted(candidates):
             if not _safe_file(path, ROOT):
                 continue
