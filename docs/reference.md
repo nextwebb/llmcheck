@@ -567,7 +567,7 @@ The current implementation is deliberately smaller and more auditable than that.
 
 ## Example App
 
-See [examples/rag_support_agent.py](/Users/nextwebb/Documents/llmcheck/examples/rag_support_agent.py:1).
+See [examples/rag_support_agent.py](../examples/rag_support_agent.py).
 
 It shows:
 
