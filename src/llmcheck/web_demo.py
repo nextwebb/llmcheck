@@ -4,7 +4,6 @@ import argparse
 from dataclasses import asdict
 from functools import lru_cache
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from importlib.resources import files
 import json
 import os
 from pathlib import Path
@@ -15,7 +14,7 @@ from . import __version__
 from .storage.models import AppConfig, StorageConfig, JudgeConfig
 from .suite_runner import run_suite
 
-ASSETS = files('llmcheck').joinpath('demo_assets')
+ASSETS = Path(__file__).resolve().parent / 'demo_assets'
 DATA = json.loads(ASSETS.joinpath('cases.json').read_text())
 CASES = {c['id']: c for c in DATA['cases']}
 LIVE_EVALUATION = json.loads(ASSETS.joinpath('live-evaluation.json').read_text())

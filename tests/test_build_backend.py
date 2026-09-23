@@ -182,3 +182,23 @@ def test_archive_paths_are_posix_even_when_source_paths_are_windows() -> None:
     base = PureWindowsPath(r"C:\checkout\src")
     path = base / "llmcheck" / "demo_assets" / "cases.json"
     assert backend._archive_name(path, base) == "llmcheck/demo_assets/cases.json"
+
+
+def test_editable_install_loads_demo_assets_from_checkout(tmp_path):
+    import subprocess
+    import sys
+    from zipfile import ZipFile
+    backend = _load_build_backend()
+    wheel = tmp_path / backend.build_editable(str(tmp_path))
+    installed = tmp_path / "editable-install"
+    with ZipFile(wheel) as archive:
+        archive.extractall(installed)
+    code = (
+        "import sys; sys.path.insert(0, " + repr(str(installed)) + "); "
+        "from llmcheck import web_demo; "
+        "assert len(web_demo.CASES) == 12; "
+        "assert web_demo.ASSETS.joinpath('companion.zip').is_file(); "
+        "assert web_demo.LIVE_EVALUATION['evaluated_cases'] == 12"
+    )
+    result = subprocess.run([sys.executable, "-I", "-c", code], cwd=tmp_path, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
