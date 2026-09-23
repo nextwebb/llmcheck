@@ -21,6 +21,6 @@ pytest -q tests/test_build_backend.py
 
 Install the built wheel in a fresh environment outside the repository and run `llmcheck --help`. Build a wheel from the source distribution too. Confirm package files, console entry points and the synthetic demo are available without the original source tree. The packaging tests exercise portability and archive exclusions.
 
-Keep `pyproject.toml` and `llmcheck.__version__` aligned. The build backend reads the distribution version from `pyproject.toml`. Update CHANGELOG.md, review the distribution contents and resolve the license before publishing. Building locally does not publish a release.
+Keep `pyproject.toml` and `llmcheck.__version__` aligned. The build backend reads the distribution version from `pyproject.toml`. Update CHANGELOG.md, review the distribution contents and confirm LICENSE and NOTICE are included before publishing. Building locally does not publish a release.
 
 For bug reports, include the version, a minimal synthetic reproduction, expected behavior and actual output. Avoid posting real prompts, credentials or customer identifiers. Security-sensitive reports follow SECURITY.md.

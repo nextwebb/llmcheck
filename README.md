@@ -4,7 +4,7 @@ Capture a bad LLM response, review what should have happened, and turn it into a
 
 LLMCheck is a Python tool with local SQLite storage, reviewed YAML cases, and a command-line suite runner. It wraps synchronous OpenAI chat-completions calls. A separate experimental workflow supports reviewed knowledge reuse.
 
-**Release status:** 0.4.0 candidate. Source checkout, wheel and source-distribution installation are supported. This README does not imply a published PyPI release. A redistribution license has not yet been selected in this repository; see [License](#license).
+**Release status:** 0.4.0 candidate. Source checkout, wheel and source-distribution installation are supported. This README does not imply a published PyPI release. Licensed under Apache-2.0; see [License](#license).
 
 ## Try the synthetic demo
 
@@ -118,4 +118,4 @@ pytest -q
 
 ## License
 
-No license file was present when this release candidate was prepared. Public source availability alone does not grant an open-source redistribution license. The repository owner must choose and add a license before this release is described or distributed as licensed open-source software. No license choice is implied by the build metadata.
+Copyright 2026 Peterson Oaikhenah. Licensed under the [Apache License, Version 2.0](LICENSE). See [NOTICE](NOTICE) for attribution.

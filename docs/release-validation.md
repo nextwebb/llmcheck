@@ -29,7 +29,7 @@ The article companion download reproduces the original 0.3.0 article; its README
 
 ## Not established
 
-Broad provider support, streaming capture, multi-user hosting, semantic memory quality, confidence calibration, independent human benchmarking and production suitability remain outside the release claim. Licensing must be selected by the copyright owner before an open-source release is declared.
+Broad provider support, streaming capture, multi-user hosting, semantic memory quality, confidence calibration, independent human benchmarking and production suitability remain outside the release claim. The core is licensed under Apache-2.0; this does not imply a published PyPI package or completion of the prospective SaaS product.
 
 ## Deployment verification
 

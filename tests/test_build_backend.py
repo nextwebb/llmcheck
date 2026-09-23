@@ -105,3 +105,78 @@ def test_package_data_is_included_and_symlinks_are_excluded(tmp_path, monkeypatc
     with ZipFile(tmp_path / wheel) as archive:
         assert archive.read("llmcheck/demo_assets/companion.zip") == b"synthetic-fixture"
         assert "llmcheck/demo_assets/outside.txt" not in archive.namelist()
+
+
+def test_apache_license_metadata_and_files_survive_all_build_paths(tmp_path) -> None:
+    import tarfile
+    from email.parser import Parser
+    from zipfile import ZipFile
+
+    backend = _load_build_backend()
+    metadata = Parser().parsestr(backend._metadata_text())
+    assert metadata["Metadata-Version"] == "2.4"
+    assert metadata["License-Expression"] == "Apache-2.0"
+    assert metadata.get_all("License-File") == ["LICENSE", "NOTICE"]
+    assert metadata["License"] is None
+    expected = {name: (backend.ROOT / name).read_bytes() for name in ("LICENSE", "NOTICE")}
+    assert b"Apache License" in expected["LICENSE"]
+    assert b"Copyright 2026 Peterson Oaikhenah" in expected["NOTICE"]
+    for method in (backend.build_wheel, backend.build_editable):
+        with ZipFile(tmp_path / method(str(tmp_path))) as archive:
+            for name, content in expected.items():
+                assert archive.read(f"{backend._dist_info_dir()}/licenses/{name}") == content
+    metadata_dir = tmp_path / "metadata"
+    info = backend.prepare_metadata_for_build_wheel(str(metadata_dir))
+    for name, content in expected.items():
+        assert (metadata_dir / info / "licenses" / name).read_bytes() == content
+    with tarfile.open(tmp_path / backend.build_sdist(str(tmp_path))) as archive:
+        prefix = f"{backend.PROJECT}-{backend.VERSION}"
+        for name, content in expected.items():
+            assert archive.extractfile(f"{prefix}/{name}").read() == content
+        pkg = Parser().parsestr(archive.extractfile(f"{prefix}/PKG-INFO").read().decode())
+        assert pkg["License-Expression"] == "Apache-2.0"
+        assert pkg.get_all("License-File") == ["LICENSE", "NOTICE"]
+
+
+def test_distribution_boundaries_exclude_hidden_files_and_private_dumps(tmp_path, monkeypatch) -> None:
+    import shutil
+    import tarfile
+    from zipfile import ZipFile
+
+    backend = _load_build_backend()
+    root = tmp_path / "project"
+    package = root / "src" / "llmcheck"
+    package.mkdir(parents=True)
+    for name in ("README.md", "LICENSE", "NOTICE", "pyproject.toml", "build_backend.py"):
+        shutil.copyfile(backend.ROOT / name, root / name)
+    (package / "__init__.py").write_text("")
+    included = ["demo_assets/cases.json", "demo_assets/live-evaluation.json", "demo_assets/companion.zip"]
+    excluded = [".env", "debug.json", "customer-dump.txt", "capture.db", "untracked.zip", ".private/settings.py", "demo_assets/.env", "demo_assets/private-dump.json"]
+    for name in included + excluded:
+        path = package / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("synthetic-test-data")
+    (root / "docs").mkdir()
+    (root / "docs" / "private-dump.json").write_text("do not package")
+    monkeypatch.setattr(backend, "ROOT", root)
+    monkeypatch.setattr(backend, "SRC", root / "src")
+    with ZipFile(tmp_path / backend.build_wheel(str(tmp_path))) as archive:
+        names = set(archive.namelist())
+        assert all("llmcheck/" + name in names for name in included)
+        assert all("llmcheck/" + name not in names for name in excluded)
+        assert all("\\" not in name for name in names)
+    with tarfile.open(tmp_path / backend.build_sdist(str(tmp_path))) as archive:
+        names = set(archive.getnames())
+        prefix = f"{backend.PROJECT}-{backend.VERSION}/src/llmcheck/"
+        assert all(prefix + name in names for name in included)
+        assert all(prefix + name not in names for name in excluded)
+        assert not any(name.endswith("docs/private-dump.json") for name in names)
+        assert all("\\" not in name for name in names)
+
+
+def test_archive_paths_are_posix_even_when_source_paths_are_windows() -> None:
+    from pathlib import PureWindowsPath
+    backend = _load_build_backend()
+    base = PureWindowsPath(r"C:\checkout\src")
+    path = base / "llmcheck" / "demo_assets" / "cases.json"
+    assert backend._archive_name(path, base) == "llmcheck/demo_assets/cases.json"

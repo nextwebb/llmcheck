@@ -9,9 +9,9 @@
 - Add source-distribution builds and packaging checks for installation away from the source checkout.
 - Include the README and source URL in distribution metadata; read the version from pyproject.toml.
 - Replace the long README with installation, capture/review/replay and synthetic-demo guidance; move detailed reference material into docs/reference.md.
-- Add contributing and security guidance. Licensing remains an explicit release decision.
+- Add contributing and security guidance. License the core under Apache-2.0, including license notices in built distributions.
 
-The candidate is not a claim of a PyPI publication, a verified hosted demo URL or production adoption. Other feature changes must be verified against the final release diff before tagging.
+The synthetic demo is deployed at https://llmcheck-demo.onrender.com. This candidate is not a claim of PyPI publication or production adoption.
 
 ## 0.3.0
 
